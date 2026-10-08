@@ -3,6 +3,8 @@ import javax.swing.Timer;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -15,9 +17,17 @@ public class GamePanel extends JPanel implements KeyListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.fillOval((int) p.x, (int) p.y, p.w, p.h);
+
+        // fluidifier les mouvements
+        Graphics2D g2 = (Graphics2D) g;
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
         g.setColor(p.c);
+        g.fillOval((int) p.x, (int) p.y, p.w, p.h);
     }
+
+    // gérer les déplacements
 
     private void updateGame(double dt) {
         if (up)
@@ -35,6 +45,7 @@ public class GamePanel extends JPanel implements KeyListener {
         addKeyListener(this);
         setBackground(Color.BLACK);
 
+        // vérifier périodiquement si il y a eu un changement
         Timer t = new Timer(16, e -> {
             long now = System.nanoTime();
             double dt = (now - lastTime) / 1e9;
@@ -50,48 +61,43 @@ public class GamePanel extends JPanel implements KeyListener {
         // ...
     }
 
+    // à chaque touches pressée
     @Override
     public void keyPressed(KeyEvent e) {
         int k = e.getKeyCode();
         switch (k) {
             case KeyEvent.VK_UP:
                 up = true;
-                System.out.println("Touche haut pressée");
                 break;
             case KeyEvent.VK_DOWN:
                 down = true;
-                System.out.println("Touche bas pressée");
                 break;
             case KeyEvent.VK_LEFT:
                 left = true;
-                System.out.println("Touche gauche pressée");
                 break;
             case KeyEvent.VK_RIGHT:
                 right = true;
-                System.out.println("Touche droite pressée");
                 break;
         }
     }
 
+
+    // à chaque touches relachées
     @Override
     public void keyReleased(KeyEvent e) {
         int k = e.getKeyCode();
         switch (k) {
             case KeyEvent.VK_UP:
                 up = false;
-                System.out.println("Touche haut relâchée");
                 break;
             case KeyEvent.VK_DOWN:
                 down = false;
-                System.out.println("Touche bas relâchée");
                 break;
             case KeyEvent.VK_LEFT:
                 left = false;
-                System.out.println("Touche gauche relâchée");
                 break;
             case KeyEvent.VK_RIGHT:
                 right = false;
-                System.out.println("Touche droite relâchée");
                 break;
         }
     }
