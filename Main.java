@@ -5,7 +5,7 @@ class Main {
     public static final int W = 1000;
     public String t = "Starship";
 
-    final void run() {
+    void run() {
         // fenêtre
         JFrame f = new JFrame();
         f.setSize(W, H);
