@@ -14,14 +14,17 @@ You are a spaceship and you need to dodge some asteroids during your run, try to
 - Calculation of the time elapsed between each window update (representated by "dt" in the project)
 - Stars and moving background
 - Optimization for smoother experience
+- Asteroids which spawn each 200ms
+- Life system (2 chances)
+- Program close when you lose (when hp < 2)
 
 ## To-do
 
-- Asteroids and collisions
 - Score, difficulties
 - Speed boost
 - End/ Start screen
 - Real spaceship instead of a orange circle
+- Customizable difficulty
 
 ## Launch
 
