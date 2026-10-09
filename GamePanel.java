@@ -17,15 +17,15 @@ public class GamePanel extends JPanel implements KeyListener {
     private Player p = new Player();
     long lastTime;
     int sc = 80; // nombre d'étoiles en arrière plan
-    int ac = 10; // nombre d'asteroids
+    int ac = 5; // nombre d'asteroids
     double[] sx = new double[sc];
     double[] sy = new double[sc];
     ArrayList<Asteroid> asteroids = new ArrayList<Asteroid>();
     Random r = new Random();
     double sp = 240; // vitesse des étoiles => px/s
-    double ap = 420; // vitesse des asteroids => px/s
+    double ap = 720; // vitesse des asteroids => px/s
     double spawnT = 0;
-    double spawnI = 2; // interval entre deux apparitions d'asteroids
+    double spawnI = 200; // interval entre deux apparitions d'asteroids
 
 
     @Override
@@ -79,10 +79,12 @@ public class GamePanel extends JPanel implements KeyListener {
 
         spawnT += dt;
 
-        if(spawnT >= spawnI) {
-            spawnAsteroid();
+        /** if(spawnT >= spawnI) {
+            for(int i = 0; i < ac; i++) {
+                spawnAsteroid();
+            }
             spawnT -= spawnI;
-        }
+        } */
 
         if (up)
             p.y -= p.speed * dt;
@@ -175,6 +177,11 @@ public class GamePanel extends JPanel implements KeyListener {
             repaint();
         });
         t.start();
+
+        Timer t_ = new Timer((int) spawnI, e -> {
+            spawnAsteroid();
+        });
+        t_.start();
     }
 
     @Override
