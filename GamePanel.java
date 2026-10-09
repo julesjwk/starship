@@ -8,23 +8,24 @@ import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.Ellipse2D;
+import java.util.ArrayList;
 import java.util.Random;
 import java.awt.Rectangle;
 
 public class GamePanel extends JPanel implements KeyListener {
     boolean up = false, right = false, left = false, down = false;
     private Player p = new Player();
-    private Asteroid a = new Asteroid();
     long lastTime;
     int sc = 80; // nombre d'étoiles en arrière plan
-    int ac = 4; // nombre d'asteroids
+    int ac = 10; // nombre d'asteroids
     double[] sx = new double[sc];
     double[] sy = new double[sc];
-    double[] ax = new double[ac];
-    double[] ay = new double[ac];
+    ArrayList<Asteroid> asteroids = new ArrayList<Asteroid>();
     Random r = new Random();
     double sp = 240; // vitesse des étoiles => px/s
-    double ap = 120; // vitesse des asteroids => px/s
+    double ap = 420; // vitesse des asteroids => px/s
+    double spawnT = 0;
+    double spawnI = 2; // interval entre deux apparitions d'asteroids
 
 
     @Override
@@ -44,10 +45,14 @@ public class GamePanel extends JPanel implements KeyListener {
         }
 
         // afficher les asteroids
-        g2.setColor(a.c);
-
-        for(int i = 0; i < ac; i++) {
-            g2.fillOval((int) ax[i], (int) ay[i], a.w, a.h);
+        for(Asteroid a : asteroids) {
+            g2.setColor(a.c);
+            g2.fillOval(
+                (int) a.x,
+                (int) a.y,
+                a.w,
+                a.h
+            );
         }
 
         // afficher le joueur
@@ -55,11 +60,28 @@ public class GamePanel extends JPanel implements KeyListener {
         g2.fill(new Ellipse2D.Double(p.x, p.y, p.w, p.h));
     }
 
+    // créer un asteroid
+    private void spawnAsteroid() {
+        Asteroid a = new Asteroid();
+
+        a.x = r.nextInt(getWidth() - a.w + 1);
+        a.y = -a.h;
+
+        asteroids.add(a);
+    }
+
     // gérer les déplacements
 
     private void updateGame(double dt) {
         if (getWidth() <= 0 || getHeight() <= 0) {
             return;
+        }
+
+        spawnT += dt;
+
+        if(spawnT >= spawnI) {
+            spawnAsteroid();
+            spawnT -= spawnI;
         }
 
         if (up)
@@ -96,35 +118,37 @@ public class GamePanel extends JPanel implements KeyListener {
             }
         }
 
-        for (int i = 0; i < ac; i++) {
-            if(i > 1 && ax[i] == ax[i-1]) {
-                ax[i] = r.nextInt(getWidth() - a.w + 1);
-            }
-
-            ay[i] += sp * dt;
- 
-            if (ay[i] >= getHeight()) {
-                ay[i] = -a.h;
-                ax[i] = r.nextInt(getWidth() - a.w + 1);
+        for(int i = asteroids.size() - 1; i >= 0; i--) {
+            Asteroid a = asteroids.get(i);
+            a.y += ap * dt;
+            if (a.y >= getHeight()) {
+                asteroids.remove(i);
             }
         }
 
+        // collisions
         Rectangle playerCollision = new Rectangle(
             (int) p.x, (int) p.y, p.w, p.h
         );
 
-        for (int i = 0; i < ac; i++) {
+        for (Asteroid a : asteroids) {
             Rectangle asteroidCollision = new Rectangle(
-                (int) ax[i], (int) ay[i], a.w, a.h
+                (int) a.x, (int) a.y, a.w, a.h
             );
 
-            if(playerCollision.intersects(asteroidCollision)) {
+            boolean collision = playerCollision.intersects(asteroidCollision);
+
+            if (collision && !a.coll) {
                 p.hp -= 1;
+                System.out.println("-1 hp");
             }
+
+            a.coll = collision;
         }
 
-        if(p.hp == 0) {
-            System.out.println("Mort!");
+        // game over
+        if(p.hp <= 0) {
+            System.exit(0);
         }
     }
 
@@ -138,12 +162,6 @@ public class GamePanel extends JPanel implements KeyListener {
         for(int i = 0; i < sc; i++) {
             sx[i] = r.nextInt(Main.W);
             sy[i] = r.nextInt(Main.H);
-        }
-
-        // gérer les asteroids
-        for(int i = 0; i < ac; i++) {
-            ax[i] = r.nextInt(Main.W - a.w + 1);
-            ay[i] = -a.h;
         }
 
         // vérifier périodiquement si il y a eu un changement
