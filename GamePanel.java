@@ -9,16 +9,23 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.Ellipse2D;
 import java.util.Random;
+import java.awt.Rectangle;
 
 public class GamePanel extends JPanel implements KeyListener {
     boolean up = false, right = false, left = false, down = false;
-    public Player p = new Player();
+    private Player p = new Player();
+    private Asteroid a = new Asteroid();
     long lastTime;
-    int sc = 80;
+    int sc = 80; // nombre d'étoiles en arrière plan
+    int ac = 4; // nombre d'asteroids
     double[] sx = new double[sc];
     double[] sy = new double[sc];
+    double[] ax = new double[ac];
+    double[] ay = new double[ac];
     Random r = new Random();
-    double sp = 240;
+    double sp = 240; // vitesse des étoiles => px/s
+    double ap = 120; // vitesse des asteroids => px/s
+
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -36,6 +43,13 @@ public class GamePanel extends JPanel implements KeyListener {
             g2.fillOval((int) sx[i], (int) sy[i], 2, 2);
         }
 
+        // afficher les asteroids
+        g2.setColor(a.c);
+
+        for(int i = 0; i < ac; i++) {
+            g2.fillOval((int) ax[i], (int) ay[i], a.w, a.h);
+        }
+
         // afficher le joueur
         g2.setColor(p.c);
         g2.fill(new Ellipse2D.Double(p.x, p.y, p.w, p.h));
@@ -44,6 +58,10 @@ public class GamePanel extends JPanel implements KeyListener {
     // gérer les déplacements
 
     private void updateGame(double dt) {
+        if (getWidth() <= 0 || getHeight() <= 0) {
+            return;
+        }
+
         if (up)
             p.y -= p.speed * dt;
         if (down)
@@ -53,12 +71,21 @@ public class GamePanel extends JPanel implements KeyListener {
         if (right)
             p.x += p.speed * dt;
 
-        if (p.x > Main.W) {
-            p.x = p.x % Main.W;
+        // gérer les limites de la fenètre
+        if (p.x < 0) {
+            p.x = 0;
         }
 
-        if (p.y > Main.H) {
-            p.y = p.y % Main.H;
+        if (p.x > getWidth() - p.w)  {
+            p.x = getWidth() - p.w;
+        }
+
+        if (p.y < 0) {
+            p.y = 0;
+        }
+
+        if (p.y > getHeight() - p.h) {
+            p.y = getHeight() - p.h;
         }
 
         for (int i = 0; i < sc; i++) {
@@ -67,6 +94,37 @@ public class GamePanel extends JPanel implements KeyListener {
                 sy[i] = getHeight();
                 sx[i] = r.nextInt(getWidth());
             }
+        }
+
+        for (int i = 0; i < ac; i++) {
+            if(i > 1 && ax[i] == ax[i-1]) {
+                ax[i] = r.nextInt(getWidth() - a.w + 1);
+            }
+
+            ay[i] += sp * dt;
+ 
+            if (ay[i] >= getHeight()) {
+                ay[i] = -a.h;
+                ax[i] = r.nextInt(getWidth() - a.w + 1);
+            }
+        }
+
+        Rectangle playerCollision = new Rectangle(
+            (int) p.x, (int) p.y, p.w, p.h
+        );
+
+        for (int i = 0; i < ac; i++) {
+            Rectangle asteroidCollision = new Rectangle(
+                (int) ax[i], (int) ay[i], a.w, a.h
+            );
+
+            if(playerCollision.intersects(asteroidCollision)) {
+                p.hp -= 1;
+            }
+        }
+
+        if(p.hp == 0) {
+            System.out.println("Mort!");
         }
     }
 
@@ -80,6 +138,12 @@ public class GamePanel extends JPanel implements KeyListener {
         for(int i = 0; i < sc; i++) {
             sx[i] = r.nextInt(Main.W);
             sy[i] = r.nextInt(Main.H);
+        }
+
+        // gérer les asteroids
+        for(int i = 0; i < ac; i++) {
+            ax[i] = r.nextInt(Main.W - a.w + 1);
+            ay[i] = -a.h;
         }
 
         // vérifier périodiquement si il y a eu un changement
